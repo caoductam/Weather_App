@@ -3,30 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App</title>
-    <meta name="description" content="Ứng dụng xem thời tiết đơn giản">
+    <title>Weather App Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles/styles.css">
-    <link rel="manifest" href="manifest.json">
-    <!-- Thêm icon cho PWA -->
-    <link rel="icon" type="image/png" href="images/icon-72x72.png">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Weather App</h1>
+            <h1><i class="fas fa-cloud-sun"></i> Weather App Pro</h1>
             <div class="search-container">
                 <input type="text" id="search-input" placeholder="Nhập tên thành phố...">
-                <button id="search-btn">Tìm kiếm</button>
-                <button id="location-btn">Vị trí hiện tại</button>
+                <button id="search-btn"><i class="fas fa-search"></i> Tìm kiếm</button>
+                <button id="location-btn"><i class="fas fa-location-arrow"></i> Vị trí hiện tại</button>
             </div>
         </header>
 
         <main>
-            <div id="loading" class="hidden">Đang tải dữ liệu...</div>
+            <div id="loading" class="hidden"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
             <div id="error" class="hidden"></div>
             
             <section id="current-weather" class="hidden">
-                <h2>Thời tiết hiện tại</h2>
+                <h2><i class="fas fa-cloud-sun-rain"></i> Thời tiết hiện tại</h2>
                 <div class="weather-card">
                     <h3 id="city-name"></h3>
                     <div class="weather-info">
@@ -37,38 +34,25 @@
                         </div>
                     </div>
                     <div class="details">
-                        <p>Độ ẩm: <span id="humidity"></span>%</p>
-                        <p>Tốc độ gió: <span id="wind-speed"></span> m/s</p>
-                        <p>Áp suất: <span id="pressure"></span> hPa</p>
+                        <p><i class="fas fa-tint"></i> Độ ẩm: <span id="humidity"></span>%</p>
+                        <p><i class="fas fa-wind"></i> Tốc độ gió: <span id="wind-speed"></span> m/s</p>
+                        <p><i class="fas fa-compress-alt"></i> Áp suất: <span id="pressure"></span> hPa</p>
                     </div>
                 </div>
             </section>
 
             <section id="forecast" class="hidden">
-                <h2>Dự báo 5 ngày</h2>
+                <h2><i class="fas fa-calendar-alt"></i> Dự báo 5 ngày</h2>
                 <div id="forecast-container" class="forecast-container"></div>
             </section>
         </main>
 
         <footer>
-            <p>Dữ liệu được cung cấp bởi <a href="https://openweathermap.org/">OpenWeatherMap</a></p>
+            <p>Dữ liệu được cung cấp bởi <a href="https://openweathermap.org/"><i class="fas fa-external-link-alt"></i> OpenWeatherMap</a></p>
         </footer>
     </div>
 
     <script src="scripts/storage.js"></script>
     <script src="scripts/app.js"></script>
-    <script>
-        // Đăng ký Service Worker
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/scripts/service-worker.js')
-                    .then((registration) => {
-                        console.log('SW registered: ', registration);
-                    }).catch((registrationError) => {
-                        console.log('SW registration failed: ', registrationError);
-                    });
-            });
-        }
-    </script>
 </body>
 </html>
