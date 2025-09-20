@@ -3,24 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather App Pro</title>
+    <title>Weather App Pro - Ứng dụng thời tiết đa nền tảng</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles/style.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-cloud-sun"></i> Weather App</h1>
-            <div class="search-container">
-                <input type="text" id="search-input" placeholder="Nhập tên thành phố...">
-                <button id="search-btn"><i class="fas fa-search"></i> Tìm kiếm</button>
-                <button id="location-btn"><i class="fas fa-location-arrow"></i> Vị trí hiện tại</button>
+        <header class="app-header">
+            <div class="app-title">
+                <i class="fas fa-cloud-sun fa-2x"></i>
+                <h1>Weather App Pro</h1>
+            </div>
+            <div class="settings-panel">
+                <div class="setting-group">
+                    <i class="fas fa-language"></i>
+                    <select id="language-selector">
+                        <option value="vi">Tiếng Việt</option>
+                        <option value="en">English</option>
+                        <option value="fr">Français</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                <div class="setting-group">
+                    <i class="fas fa-thermometer-half"></i>
+                    <div class="unit-toggle">
+                        <button id="celsius-btn" class="active">°C</button>
+                        <button id="fahrenheit-btn">°F</button>
+                    </div>
+                </div>
             </div>
         </header>
+
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Nhập tên thành phố...">
+            <button id="search-btn"><i class="fas fa-search"></i> Tìm kiếm</button>
+            <button id="location-btn"><i class="fas fa-location-arrow"></i> Vị trí hiện tại</button>
+        </div>
 
         <main>
             <div id="loading" class="hidden"><i class="fas fa-spinner fa-spin"></i> Đang tải dữ liệu...</div>
             <div id="error" class="hidden"></div>
+            
+            <section id="alerts" class="alert-section hidden">
+                <h2><i class="fas fa-exclamation-triangle"></i> Cảnh báo thời tiết</h2>
+                <div id="alert-container"></div>
+            </section>
             
             <section id="current-weather" class="hidden">
                 <h2><i class="fas fa-cloud-sun-rain"></i> Thời tiết hiện tại</h2>
@@ -34,15 +62,41 @@
                         </div>
                     </div>
                     <div class="details">
-                        <p><i class="fas fa-tint"></i> Độ ẩm: <span id="humidity"></span>%</p>
-                        <p><i class="fas fa-wind"></i> Tốc độ gió: <span id="wind-speed"></span> m/s</p>
-                        <p><i class="fas fa-compress-alt"></i> Áp suất: <span id="pressure"></span> hPa</p>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-tint"></i> Độ ẩm</h4>
+                            <div class="detail-value"><span id="humidity"></span><span class="detail-unit">%</span></div>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-wind"></i> Gió</h4>
+                            <div class="detail-value"><span id="wind-speed"></span><span class="detail-unit">m/s</span></div>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-compress-alt"></i> Áp suất</h4>
+                            <div class="detail-value"><span id="pressure"></span><span class="detail-unit">hPa</span></div>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-eye"></i> Tầm nhìn</h4>
+                            <div class="detail-value"><span id="visibility"></span><span class="detail-unit">km</span></div>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-sun"></i> Chỉ số UV</h4>
+                            <div class="detail-value"><span id="uv-index"></span></div>
+                        </div>
+                        <div class="detail-card">
+                            <h4><i class="fas fa-cloud-rain"></i> Lượng mưa</h4>
+                            <div class="detail-value"><span id="rain-volume"></span><span class="detail-unit">mm</span></div>
+                        </div>
                     </div>
                 </div>
             </section>
 
+            <section class="map-container hidden" id="map-section">
+                <h2><i class="fas fa-map-marked-alt"></i> Bản đồ thời tiết</h2>
+                <div id="map"></div>
+            </section>
+
             <section id="forecast" class="hidden">
-                <h2><i class="fas fa-calendar-alt"></i> Dự báo thời tiết trong 5 ngày tới</h2>
+                <h2><i class="fas fa-calendar-alt"></i> Dự báo 5 ngày</h2>
                 <div id="forecast-container" class="forecast-container"></div>
             </section>
         </main>
@@ -52,6 +106,7 @@
         </footer>
     </div>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="scripts/storage.js"></script>
     <script src="scripts/app.js"></script>
 </body>
