@@ -18,3 +18,4 @@
   + Hỗ trợ đa ngôn ngữ (Hỗ trợ 4 ngôn ngữ, giao diện thay đổi theo ngôn ngữ được chọn)
   + Thông tin chi tiết (Chỉ số UV, tầm nhìn, lượng mưa, hiển thị thông tin chi tiết trong card riêng biệt)
 - Link deploy: https://chimerical-tarsier-5decb3.netlify.app/
+- Chạy trong VSCode: python -m http.server 8000
