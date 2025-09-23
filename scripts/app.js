@@ -230,56 +230,82 @@ function getLocationWeather() {
 }
 
 // Hàm lấy dữ liệu thời tiết theo tên thành phố
-async function getWeatherData(city) {
+// Hàm bỏ dấu tiếng Việt
+function removeVietnameseTones(str) {
+    return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+
+async function getWeatherData(cityInput) {
     showLoading();
     hideError();
 
-    try {
-        // Lấy nhiều kết quả để lọc
-        const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=5&appid=${API_KEY}`);
-        const geoData = await geoRes.json();
+    // Chuẩn hóa input
+    let city = cityInput.trim();
+    let country = 'VN'; // Bạn có thể cho người dùng chọn country nếu muốn
 
-        if (!geoData || geoData.length === 0) {
-            showError(translations[currentLanguage].cityNotFound);
-            return;
-        }
+    // Bỏ dấu để so sánh
+    const cityNoAccent = removeVietnameseTones(city).toLowerCase();
 
-        // Lọc kết quả theo cấp độ thành phố
-        let location = geoData.find(loc => loc.type === "city");
-        // Nếu không có type: "city", ưu tiên name trùng khớp (không phân biệt hoa thường)
-        if (!location) {
-            location = geoData.find(loc => loc.name.toLowerCase() === city.toLowerCase());
-        }
-        // Nếu không có, ưu tiên state trùng khớp (dành cho các thành phố lớn như Hà Nội)
-        if (!location) {
-            location = geoData.find(loc => loc.state && loc.state.toLowerCase() === city.toLowerCase());
-        }
-        // Nếu vẫn không có, lấy kết quả đầu tiên
-        if (!location) {
-            location = geoData[0];
-        }
+    // Lấy nhiều kết quả để lọc
+    const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)},${country}&limit=10&appid=${API_KEY}`);
+    const geoData = await geoRes.json();
 
-        const { lat, lon, name, country } = location;
-
-        // Lấy thời tiết hiện tại
-        const weatherRes = await fetch(`${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
-        const weatherData = await weatherRes.json();
-
-        // Lấy dự báo 5 ngày
-        const forecastRes = await fetch(`${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
-        const forecastData = await forecastRes.json();
-
-        // Gộp dữ liệu
-        const data = {
-            current: weatherData,
-            forecast: forecastData,
-            alerts: [] // Nếu có thể lấy alert từ One Call thì gán vào đây
-        };
-
-        displayWeatherData(data);
-    } catch (error) {
-        showError(error.message);
+    if (!geoData || geoData.length === 0) {
+        showError(translations[currentLanguage].cityNotFound);
+        return;
     }
+
+    // Lọc kết quả: country VN, type city, name trùng khớp (không dấu)
+    let location = geoData.find(loc =>
+        loc.country === 'VN' &&
+        (loc.type === 'city' || loc.type === 'administrative') &&
+        removeVietnameseTones(loc.name).toLowerCase() === cityNoAccent
+    );
+
+    // Nếu không có, ưu tiên type city
+    if (!location) {
+        location = geoData.find(loc =>
+            loc.country === 'VN' &&
+            (loc.type === 'city' || loc.type === 'administrative')
+        );
+    }
+
+    // Nếu vẫn không có, ưu tiên name trùng khớp (không dấu)
+    if (!location) {
+        location = geoData.find(loc =>
+            loc.country === 'VN' &&
+            removeVietnameseTones(loc.name).toLowerCase() === cityNoAccent
+        );
+    }
+
+    // Nếu vẫn không có, lấy kết quả đầu tiên có country VN
+    if (!location) {
+        location = geoData.find(loc => loc.country === 'VN');
+    }
+
+    // Nếu vẫn không có, lấy kết quả đầu tiên
+    if (!location) {
+        location = geoData[0];
+    }
+
+    const { lat, lon, name, country: countryCode } = location;
+
+    // Lấy thời tiết hiện tại
+    const weatherRes = await fetch(`${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
+    const weatherData = await weatherRes.json();
+
+    // Lấy dự báo 5 ngày
+    const forecastRes = await fetch(`${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
+    const forecastData = await forecastRes.json();
+
+    // Gộp dữ liệu
+    const data = {
+        current: weatherData,
+        forecast: forecastData,
+        alerts: []
+    };
+
+    displayWeatherData(data);
 }
 // Hàm lấy dữ liệu thời tiết theo tọa độ
 async function getWeatherByCoords(lat, lon) {
