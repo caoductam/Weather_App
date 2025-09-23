@@ -235,8 +235,8 @@ async function getWeatherData(city) {
     hideError();
 
     try {
-        // Lấy tọa độ thành phố
-        const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`);
+        // Lấy nhiều kết quả để lọc
+        const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=5&appid=${API_KEY}`);
         const geoData = await geoRes.json();
 
         if (!geoData || geoData.length === 0) {
@@ -244,7 +244,22 @@ async function getWeatherData(city) {
             return;
         }
 
-        const { lat, lon, name, country } = geoData[0];
+        // Lọc kết quả theo cấp độ thành phố
+        let location = geoData.find(loc => loc.type === "city");
+        // Nếu không có type: "city", ưu tiên name trùng khớp (không phân biệt hoa thường)
+        if (!location) {
+            location = geoData.find(loc => loc.name.toLowerCase() === city.toLowerCase());
+        }
+        // Nếu không có, ưu tiên state trùng khớp (dành cho các thành phố lớn như Hà Nội)
+        if (!location) {
+            location = geoData.find(loc => loc.state && loc.state.toLowerCase() === city.toLowerCase());
+        }
+        // Nếu vẫn không có, lấy kết quả đầu tiên
+        if (!location) {
+            location = geoData[0];
+        }
+
+        const { lat, lon, name, country } = location;
 
         // Lấy thời tiết hiện tại
         const weatherRes = await fetch(`${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
@@ -266,7 +281,6 @@ async function getWeatherData(city) {
         showError(error.message);
     }
 }
-
 // Hàm lấy dữ liệu thời tiết theo tọa độ
 async function getWeatherByCoords(lat, lon) {
     try {
