@@ -382,33 +382,45 @@ function displayAlerts(alerts) {
 function displayCurrentWeather(data) {
     const t = translations[currentLanguage];
 
-    document.getElementById('city-name').textContent = `${data.name}${data.sys.country ? ', ' + data.sys.country : ''}`;
+    // Kiểm tra tồn tại name và country
+    const cityName = data.name || '';
+    const country = (data.sys && data.sys.country) ? data.sys.country : '';
+    document.getElementById('city-name').textContent = `${cityName}${country ? ', ' + country : ''}`;
 
-    const temp = convertTemperature(data.main.temp);
-    document.getElementById('current-temp').textContent = `${Math.round(temp)}°${currentUnit === 'celsius' ? 'C' : 'F'}`;
+    // Nhiệt độ
+    const temp = data.main && typeof data.main.temp !== 'undefined' ? convertTemperature(data.main.temp) : 'N/A';
+    document.getElementById('current-temp').textContent = `${temp !== 'N/A' ? Math.round(temp) : temp}°${currentUnit === 'celsius' ? 'C' : 'F'}`;
 
-    document.getElementById('weather-desc').textContent = data.weather[0].description;
-    document.getElementById('humidity').textContent = data.main.humidity;
-    document.getElementById('wind-speed').textContent = data.wind.speed;
-    document.getElementById('pressure').textContent = data.main.pressure;
+    // Mô tả thời tiết
+    const weatherDesc = (data.weather && data.weather[0] && data.weather[0].description) ? data.weather[0].description : '';
+    document.getElementById('weather-desc').textContent = weatherDesc;
 
-    // Hiển thị tầm nhìn (chuyển từ mét sang km)
-    document.getElementById('visibility').textContent = (data.visibility / 1000).toFixed(1);
+    // Độ ẩm
+    document.getElementById('humidity').textContent = data.main && typeof data.main.humidity !== 'undefined' ? data.main.humidity : 'N/A';
 
-    // Hiển thị chỉ số UV
-    document.getElementById('uv-index').textContent = data.uvi || 'N/A';
+    // Gió
+    document.getElementById('wind-speed').textContent = data.wind && typeof data.wind.speed !== 'undefined' ? data.wind.speed : 'N/A';
 
-    // Hiển thị lượng mưa (nếu có)
-    if (data.rain && data.rain["1h"]) {
-        document.getElementById('rain-volume').textContent = data.rain["1h"];
-    } else {
-        document.getElementById('rain-volume').textContent = '0';
+    // Áp suất
+    document.getElementById('pressure').textContent = data.main && typeof data.main.pressure !== 'undefined' ? data.main.pressure : 'N/A';
+
+    // Tầm nhìn (mét sang km)
+    document.getElementById('visibility').textContent = typeof data.visibility !== 'undefined' ? (data.visibility / 1000).toFixed(1) : 'N/A';
+
+    // Chỉ số UV (chỉ có nếu lấy từ One Call API)
+    document.getElementById('uv-index').textContent = typeof data.uvi !== 'undefined' ? data.uvi : 'N/A';
+
+    // Lượng mưa
+    let rainVolume = '0';
+    if (data.rain && typeof data.rain["1h"] !== 'undefined') {
+        rainVolume = data.rain["1h"];
     }
+    document.getElementById('rain-volume').textContent = rainVolume;
 
-    // Cập nhật icon
-    const iconCode = data.weather[0].icon;
+    // Icon thời tiết
+    const iconCode = (data.weather && data.weather[0] && data.weather[0].icon) ? data.weather[0].icon : '01d';
     document.getElementById('weather-icon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
-    document.getElementById('weather-icon').alt = data.weather[0].description;
+    document.getElementById('weather-icon').alt = weatherDesc;
 
     currentWeatherEl.classList.remove('hidden');
 }
