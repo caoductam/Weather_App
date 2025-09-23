@@ -142,7 +142,7 @@ fahrenheitBtn.addEventListener('click', () => changeUnit('fahrenheit'));
 function changeLanguage() {
     currentLanguage = languageSelector.value;
     updateUIWithTranslations();
-    
+
     // Cập nhật lại dữ liệu thời tiết nếu đã có
     if (currentData) {
         displayWeatherData(currentData);
@@ -152,7 +152,7 @@ function changeLanguage() {
 // Hàm cập nhật giao diện với bản dịch
 function updateUIWithTranslations() {
     const t = translations[currentLanguage];
-    
+
     // Cập nhật các phần tử giao diện
     searchInput.placeholder = t.searchPlaceholder;
     searchBtn.innerHTML = `<i class="fas fa-search"></i> ${t.searchButton}`;
@@ -162,10 +162,10 @@ function updateUIWithTranslations() {
     document.querySelector('#forecast h2').innerHTML = `<i class="fas fa-calendar-alt"></i> ${t.forecast}`;
     document.querySelector('#alerts h2').innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${t.alerts}`;
     document.querySelector('#map-section h2').innerHTML = `<i class="fas fa-map-marked-alt"></i> ${t.map}`;
-    
+
     // Cập nhật footer
     document.querySelector('footer p').innerHTML = `${t.providedBy} <a href="https://openweathermap.org/"><i class="fas fa-external-link-alt"></i> OpenWeatherMap</a>`;
-    
+
     // Cập nhật các thẻ chi tiết
     document.querySelector('[data-translate="humidity"]').innerHTML = `<i class="fas fa-tint"></i> ${t.humidity}`;
     document.querySelector('[data-translate="wind"]').innerHTML = `<i class="fas fa-wind"></i> ${t.wind}`;
@@ -178,11 +178,11 @@ function updateUIWithTranslations() {
 // Hàm thay đổi đơn vị nhiệt độ
 function changeUnit(unit) {
     currentUnit = unit;
-    
+
     // Cập nhật nút active
     celsiusBtn.classList.toggle('active', unit === 'celsius');
     fahrenheitBtn.classList.toggle('active', unit === 'fahrenheit');
-    
+
     // Cập nhật lại dữ liệu thời tiết nếu đã có
     if (currentData) {
         displayWeatherData(currentData);
@@ -195,7 +195,7 @@ function convertTemperature(temp) {
         return temp;
     } else {
         // Chuyển từ Celsius sang Fahrenheit
-        return (temp * 9/5) + 32;
+        return (temp * 9 / 5) + 32;
     }
 }
 
@@ -215,7 +215,7 @@ function getLocationWeather() {
         showError(translations[currentLanguage].locationError);
         return;
     }
-    
+
     showLoading();
     navigator.geolocation.getCurrentPosition(
         position => {
@@ -233,72 +233,35 @@ function getLocationWeather() {
 async function getWeatherData(city) {
     showLoading();
     hideError();
-    
+
     try {
-        // Sử dụng dữ liệu mẫu cho mục đích demo
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Tạo dữ liệu giả lập cho demo
-        const demoData = {
-            current: {
-                name: city,
-                coord: {
-                    lat: 21.0278 + (Math.random() - 0.5) * 0.1,
-                    lon: 105.8342 + (Math.random() - 0.5) * 0.1
-                },
-                sys: { country: "VN" },
-                main: { 
-                    temp: Math.round(Math.random() * 30 + 10),
-                    humidity: Math.round(Math.random() * 50 + 30),
-                    pressure: Math.round(Math.random() * 200 + 1000),
-                    feels_like: Math.round(Math.random() * 30 + 10)
-                },
-                wind: { 
-                    speed: (Math.random() * 10).toFixed(1),
-                    deg: Math.round(Math.random() * 360)
-                },
-                weather: [{ 
-                    description: ["nắng", "mây", "mưa nhẹ", "trời quang"][Math.floor(Math.random() * 4)],
-                    icon: ["01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d"][Math.floor(Math.random() * 9)]
-                }],
-                visibility: Math.round(Math.random() * 10 + 5) * 1000, // meters
-                rain: Math.random() > 0.7 ? { "1h": (Math.random() * 10).toFixed(1) } : null
-            },
-            forecast: {
-                list: Array(5).fill().map((_, i) => {
-                    const date = new Date();
-                    date.setDate(date.getDate() + i + 1);
-                    return {
-                        dt: Math.floor(date.getTime() / 1000),
-                        main: { 
-                            temp: Math.round(Math.random() * 30 + 10),
-                            humidity: Math.round(Math.random() * 50 + 30),
-                        },
-                        weather: [{
-                            description: ["nắng", "mây", "mưa nhẹ", "trời quang"][Math.floor(Math.random() * 4)],
-                            icon: ["01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d"][Math.floor(Math.random() * 9)]
-                        }],
-                        wind: {
-                            speed: (Math.random() * 10).toFixed(1)
-                        }
-                    };
-                })
-            },
-            alerts: Math.random() > 0.5 ? [
-                {
-                    event: "Bão nhiệt đới",
-                    description: "Bão với gió giật mạnh và mưa lớn",
-                    start: Date.now() / 1000,
-                    end: Date.now() / 1000 + 86400,
-                    sender_name: "Trung tâm Dự báo Khí tượng Thủy văn"
-                }
-            ] : []
+        // Lấy tọa độ thành phố
+        const geoRes = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${API_KEY}`);
+        const geoData = await geoRes.json();
+
+        if (!geoData || geoData.length === 0) {
+            showError(translations[currentLanguage].cityNotFound);
+            return;
+        }
+
+        const { lat, lon, name, country } = geoData[0];
+
+        // Lấy thời tiết hiện tại
+        const weatherRes = await fetch(`${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
+        const weatherData = await weatherRes.json();
+
+        // Lấy dự báo 5 ngày
+        const forecastRes = await fetch(`${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&lang=${currentLanguage}`);
+        const forecastData = await forecastRes.json();
+
+        // Gộp dữ liệu
+        const data = {
+            current: weatherData,
+            forecast: forecastData,
+            alerts: [] // Nếu có thể lấy alert từ One Call thì gán vào đây
         };
-        
-        // Thêm chỉ số UV ngẫu nhiên
-        demoData.current.uvi = (Math.random() * 12).toFixed(1);
-        
-        displayWeatherData(demoData);
+
+        displayWeatherData(data);
     } catch (error) {
         showError(error.message);
     }
@@ -309,7 +272,7 @@ async function getWeatherByCoords(lat, lon) {
     try {
         // Sử dụng dữ liệu mẫu cho mục đích demo
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
+
         // Tạo dữ liệu giả lập cho demo
         const demoData = {
             current: {
@@ -319,17 +282,17 @@ async function getWeatherByCoords(lat, lon) {
                     lon: lon
                 },
                 sys: { country: "" },
-                main: { 
+                main: {
                     temp: Math.round(Math.random() * 30 + 10),
                     humidity: Math.round(Math.random() * 50 + 30),
                     pressure: Math.round(Math.random() * 200 + 1000),
                     feels_like: Math.round(Math.random() * 30 + 10)
                 },
-                wind: { 
+                wind: {
                     speed: (Math.random() * 10).toFixed(1),
                     deg: Math.round(Math.random() * 360)
                 },
-                weather: [{ 
+                weather: [{
                     description: ["nắng", "mây", "mưa nhẹ", "trời quang"][Math.floor(Math.random() * 4)],
                     icon: ["01d", "02d", "03d", "04d", "09d", "10d", "11d", "13d", "50d"][Math.floor(Math.random() * 9)]
                 }],
@@ -342,7 +305,7 @@ async function getWeatherByCoords(lat, lon) {
                     date.setDate(date.getDate() + i + 1);
                     return {
                         dt: Math.floor(date.getTime() / 1000),
-                        main: { 
+                        main: {
                             temp: Math.round(Math.random() * 30 + 10),
                             humidity: Math.round(Math.random() * 50 + 30),
                         },
@@ -366,10 +329,10 @@ async function getWeatherByCoords(lat, lon) {
                 }
             ] : []
         };
-        
+
         // Thêm chỉ số UV ngẫu nhiên
         demoData.current.uvi = (Math.random() * 12).toFixed(1);
-        
+
         displayWeatherData(demoData);
         searchInput.value = "Vị trí hiện tại";
     } catch (error) {
@@ -390,24 +353,24 @@ function displayWeatherData(data) {
 // Hàm hiển thị cảnh báo thời tiết
 function displayAlerts(alerts) {
     alertContainer.innerHTML = '';
-    
+
     if (alerts && alerts.length > 0) {
         alertSection.classList.remove('hidden');
-        
+
         alerts.forEach(alert => {
             const alertElement = document.createElement('div');
             alertElement.className = 'alert-card';
-            
+
             const startDate = new Date(alert.start * 1000).toLocaleDateString(currentLanguage);
             const endDate = new Date(alert.end * 1000).toLocaleDateString(currentLanguage);
-            
+
             alertElement.innerHTML = `
                 <h3><i class="fas fa-exclamation-circle"></i> ${alert.event}</h3>
                 <p>${alert.description}</p>
                 <p><strong>${translations[currentLanguage].alertFrom}:</strong> ${startDate} <strong>${translations[currentLanguage].until}:</strong> ${endDate}</p>
                 <p><strong>Nguồn:</strong> ${alert.sender_name}</p>
             `;
-            
+
             alertContainer.appendChild(alertElement);
         });
     } else {
@@ -418,35 +381,35 @@ function displayAlerts(alerts) {
 // Hàm hiển thị thời tiết hiện tại
 function displayCurrentWeather(data) {
     const t = translations[currentLanguage];
-    
+
     document.getElementById('city-name').textContent = `${data.name}${data.sys.country ? ', ' + data.sys.country : ''}`;
-    
+
     const temp = convertTemperature(data.main.temp);
     document.getElementById('current-temp').textContent = `${Math.round(temp)}°${currentUnit === 'celsius' ? 'C' : 'F'}`;
-    
+
     document.getElementById('weather-desc').textContent = data.weather[0].description;
     document.getElementById('humidity').textContent = data.main.humidity;
     document.getElementById('wind-speed').textContent = data.wind.speed;
     document.getElementById('pressure').textContent = data.main.pressure;
-    
+
     // Hiển thị tầm nhìn (chuyển từ mét sang km)
     document.getElementById('visibility').textContent = (data.visibility / 1000).toFixed(1);
-    
+
     // Hiển thị chỉ số UV
     document.getElementById('uv-index').textContent = data.uvi || 'N/A';
-    
+
     // Hiển thị lượng mưa (nếu có)
     if (data.rain && data.rain["1h"]) {
         document.getElementById('rain-volume').textContent = data.rain["1h"];
     } else {
         document.getElementById('rain-volume').textContent = '0';
     }
-    
+
     // Cập nhật icon
     const iconCode = data.weather[0].icon;
     document.getElementById('weather-icon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
     document.getElementById('weather-icon').alt = data.weather[0].description;
-    
+
     currentWeatherEl.classList.remove('hidden');
 }
 
@@ -456,24 +419,24 @@ function displayMap(coords) {
     if (map) {
         map.remove();
     }
-    
+
     // Hiển thị section bản đồ
     mapSection.classList.remove('hidden');
-    
+
     // Tạo bản đồ mới
     map = L.map('map').setView([coords.lat, coords.lon], 10);
-    
+
     // Thêm layer bản đồ
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
-    
+
     // Thêm marker cho vị trí
     L.marker([coords.lat, coords.lon])
         .addTo(map)
         .bindPopup('Vị trí hiện tại')
         .openPopup();
-        
+
     // Thêm layer mây (chỉ là ví dụ, không có dữ liệu thực)
     L.tileLayer('https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid={apiKey}', {
         apiKey: API_KEY,
@@ -484,18 +447,18 @@ function displayMap(coords) {
 // Hàm hiển thị dự báo thời tiết
 function displayForecast(data) {
     forecastContainer.innerHTML = '';
-    
+
     // Hiển thị dự báo cho 5 ngày tiếp theo
     for (let i = 0; i < 5; i++) {
         const forecast = data.list[i];
         const forecastDay = document.createElement('div');
         forecastDay.className = 'forecast-day';
-        
+
         const date = new Date(forecast.dt * 1000);
         const dayName = date.toLocaleDateString(currentLanguage, { weekday: 'long' });
-        
+
         const temp = convertTemperature(forecast.main.temp);
-        
+
         forecastDay.innerHTML = `
             <h4>${dayName}</h4>
             <img src="https://openweathermap.org/img/wn/${forecast.weather[0].icon}.png" alt="${forecast.weather[0].description}">
@@ -504,10 +467,10 @@ function displayForecast(data) {
             <p><i class="fas fa-tint"></i> ${forecast.main.humidity}%</p>
             <p><i class="fas fa-wind"></i> ${forecast.wind.speed} m/s</p>
         `;
-        
+
         forecastContainer.appendChild(forecastDay);
     }
-    
+
     forecastEl.classList.remove('hidden');
 }
 
@@ -542,7 +505,7 @@ function hideError() {
 document.addEventListener('DOMContentLoaded', () => {
     // Hiển thị hướng dẫn sử dụng
     searchInput.placeholder = translations[currentLanguage].searchPlaceholder;
-    
+
     // Thêm data-translate attribute cho các phần tử cần dịch
     document.querySelectorAll('.detail-card h4').forEach((el, index) => {
         const keys = ['humidity', 'wind', 'pressure', 'visibility', 'uv', 'rain'];
@@ -550,7 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.setAttribute('data-translate', keys[index]);
         }
     });
-    
+
     // Cập nhật giao diện với ngôn ngữ mặc định
     updateUIWithTranslations();
 });
